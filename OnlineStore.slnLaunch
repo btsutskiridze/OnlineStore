@@ -1,0 +1,22 @@
+[
+  {
+    "Name": "OnlineStore",
+    "Projects": [
+      {
+        "Path": "src\\Orders\\Orders.Api\\Orders.Api.csproj",
+        "Action": "StartWithoutDebugging",
+        "DebugTarget": ""
+      },
+      {
+        "Path": "src\\ProductCatalog\\ProductCatalog.Api\\ProductCatalog.Api.csproj",
+        "Action": "StartWithoutDebugging",
+        "DebugTarget": ""
+      },
+      {
+        "Path": "src\\Auth\\Auth.Api\\Auth.Api.csproj",
+        "Action": "StartWithoutDebugging",
+        "DebugTarget": ""
+      }
+    ]
+  }
+]
