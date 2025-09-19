@@ -1,13 +1,22 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using ProductCatalog.Api.Options;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-var jwtConfig = builder.Configuration.GetSection("Jwt");
+// Configure strongly-typed options
+builder.Services.Configure<InboundServiceAuthorizationOptions>(
+    builder.Configuration.GetSection("InboundServiceAuthorization"));
+builder.Services.Configure<JwtTokenValidationOptions>(
+    builder.Configuration.GetSection("JwtTokenValidation"));
+
+var jwtOptions = builder.Configuration.GetSection("JwtTokenValidation").Get<JwtTokenValidationOptions>()
+    ?? new JwtTokenValidationOptions();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
@@ -18,11 +27,34 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtConfig["Issuer"],
-            ValidAudience = jwtConfig["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig["Key"]!)),
+            ValidIssuer = jwtOptions.Issuer,
+            ValidAudiences = jwtOptions.AcceptedAudiences,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
         };
     });
+
+
+builder.Services.AddAuthorization((opts) =>
+{
+    var authOptions = builder.Configuration.GetSection("InboundServiceAuthorization").Get<InboundServiceAuthorizationOptions>()
+        ?? new InboundServiceAuthorizationOptions();
+
+    var interServiceConfig = authOptions.InterServiceAccess;
+
+    opts.AddPolicy("InterServiceAccessOnly", p => p
+        .RequireAssertion(ctx =>
+            ctx.User.Claims.Any(c => c.Type == "aud" && c.Value == interServiceConfig.RequiredServiceAudience) &&
+            ctx.User.Claims.Any(c => c.Type == "client_id" && c.Value == interServiceConfig.AuthorizedClientId) &&
+            interServiceConfig.RequiredPermissions.Any(permission =>
+                ctx.User.Claims.Any(c => c.Type == "permission" && c.Value == permission))
+        ));
+
+    opts.AddPolicy("PublicUserAccess", p => p
+        .RequireAssertion(ctx =>
+            ctx.User.Claims.Any(c => c.Type == "aud" && c.Value == "OnlineStore") &&
+            ctx.User.Claims.Any(c => c.Type == ClaimTypes.Role)
+        ));
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o =>

@@ -1,17 +1,20 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-var jwtConfig = builder.Configuration.GetSection("Jwt");
+var jwtConfig = builder.Configuration.GetSection("JwtTokenValidation");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
+        var acceptedAudiences = jwtConfig.GetSection("AcceptedAudiences").Get<string[]>();
+
         o.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -19,9 +22,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtConfig["Issuer"],
-            ValidAudience = jwtConfig["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig["Key"]!)),
+            ValidAudiences = acceptedAudiences,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig["SigningKey"]!)),
         };
+    });
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("PublicUserAccess", p =>
+    {
+        p
+        .RequireAssertion(ctx =>
+            ctx.User.Claims.Any(c => c.Type == "aud" && c.Value == "OnlineStore") &&
+            ctx.User.Claims.Any(c => c.Type == ClaimTypes.Role));
     });
 
 builder.Services.AddEndpointsApiExplorer();
