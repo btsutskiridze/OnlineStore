@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using Orders.Infrastructure.Data.Context;
+
 namespace Orders.Api.Extensions
 {
     public static class InfrastructureExtensions
@@ -14,6 +17,8 @@ namespace Orders.Api.Extensions
 
         private static IServiceCollection AddDatabaseServices(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddDbContext<OrdersDbContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
             return services;
         }

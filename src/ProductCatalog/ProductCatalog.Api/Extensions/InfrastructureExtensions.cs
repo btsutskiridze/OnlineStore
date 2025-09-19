@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using ProductCatalog.Infrastructure.Data.Context;
+
 namespace ProductCatalog.Api.Extensions
 {
     public static class InfrastructureExtensions
@@ -13,6 +16,10 @@ namespace ProductCatalog.Api.Extensions
 
         private static IServiceCollection AddDatabaseServices(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddDbContext<ProductCatalogDbContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+            );
+
             return services;
         }
 

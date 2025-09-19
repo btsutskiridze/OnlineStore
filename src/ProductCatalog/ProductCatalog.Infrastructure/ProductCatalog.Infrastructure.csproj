@@ -9,4 +9,12 @@
 		<ProjectReference Include="..\ProductCatalog.Application\ProductCatalog.Application.csproj" />
 		<ProjectReference Include="..\ProductCatalog.Domain\ProductCatalog.Domain.csproj" />
 	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.*" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.*" />
+	
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.*" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.*" PrivateAssets="all" />
+	</ItemGroup>
 </Project>
