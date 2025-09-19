@@ -1,4 +1,4 @@
-namespace ProductCatalog.Api.Models
+namespace Orders.Api.Responses
 {
     public class ApiErrorResponse
     {

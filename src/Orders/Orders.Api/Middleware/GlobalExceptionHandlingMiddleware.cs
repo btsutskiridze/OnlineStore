@@ -1,4 +1,4 @@
-using Orders.Api.Models;
+using Orders.Api.Responses;
 using Orders.Domain.Exceptions;
 using System.Net;
 using System.Text.Json;
