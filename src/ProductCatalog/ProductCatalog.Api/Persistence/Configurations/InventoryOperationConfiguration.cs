@@ -1,0 +1,34 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ProductCatalog.Api.Entities;
+using ProductCatalog.Api.Enums;
+
+namespace ProductCatalog.Api.Persistence.Configurations
+{
+    public class InventoryOperationConfiguration : IEntityTypeConfiguration<InventoryOperation>
+    {
+        public void Configure(EntityTypeBuilder<InventoryOperation> builder)
+        {
+            builder.ToTable("TB_InventoryOperation", "catalog");
+
+            builder.HasKey(it => it.Id).IsClustered();
+
+            builder.Property(it => it.IdempotencyKey)
+                .IsRequired()
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            builder.HasIndex(it => it.IdempotencyKey).IsUnique();
+
+            builder.Property(it => it.Type)
+                .HasConversion<byte>()
+                .HasColumnType("TINYINT")
+                .IsRequired()
+                .HasDefaultValue(InventoryOperationType.Decrement);
+
+            builder.Property(it => it.CreatedAt)
+                .IsRequired()
+                .HasColumnType("DATETIME")
+                .HasDefaultValueSql("SYSUTCDATETIME()");
+        }
+    }
+}
