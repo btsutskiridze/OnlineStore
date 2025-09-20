@@ -1,8 +1,8 @@
 namespace ProductCatalog.Api.Exceptions
 {
-    public abstract class ProductCatalogException : Exception
+    public class ProductCatalogException : Exception
     {
-        protected ProductCatalogException(string message) : base(message)
+        public ProductCatalogException(string message) : base(message)
         {
         }
 

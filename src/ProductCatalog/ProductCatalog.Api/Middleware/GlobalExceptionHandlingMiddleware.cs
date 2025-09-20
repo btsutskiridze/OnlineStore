@@ -71,6 +71,24 @@ namespace ProductCatalog.Api.Middleware
                     TraceId = traceId
                 },
 
+                ProductSkuConflictException ex => new ApiErrorResponse
+                {
+                    Title = "SKU Conflict",
+                    Status = (int)HttpStatusCode.Conflict,
+                    Detail = ex.Message,
+                    Instance = instance,
+                    TraceId = traceId
+                },
+
+                ConcurrencyConflictException ex => new ApiErrorResponse
+                {
+                    Title = "Concurrency Conflict",
+                    Status = (int)HttpStatusCode.Conflict,
+                    Detail = ex.Message,
+                    Instance = instance,
+                    TraceId = traceId
+                },
+
                 ProductCatalogException ex => new ApiErrorResponse
                 {
                     Title = "Product Catalog Error",

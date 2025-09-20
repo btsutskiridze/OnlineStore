@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using ProductCatalog.Api.Options;
-using System.Security.Claims;
 using System.Text;
 
 namespace ProductCatalog.Api.Extensions
@@ -46,13 +45,6 @@ namespace ProductCatalog.Api.Extensions
                         context.User.Claims.Any(claim => claim.Type == "client_id" && claim.Value == interServiceConfig.AuthorizedClientId) &&
                         interServiceConfig.RequiredPermissions.Any(permission =>
                             context.User.Claims.Any(claim => claim.Type == "permission" && claim.Value == permission))
-                    );
-                })
-                .AddPolicy("PublicUserAccess", policy =>
-                {
-                    policy.RequireAssertion(context =>
-                        context.User.Claims.Any(claim => claim.Type == "aud" && claim.Value == "OnlineStore") &&
-                        context.User.Claims.Any(claim => claim.Type == ClaimTypes.Role)
                     );
                 });
 
