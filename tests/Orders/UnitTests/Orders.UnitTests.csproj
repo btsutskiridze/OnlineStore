@@ -15,7 +15,6 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Orders\Orders.Domain\Orders.Domain.csproj" />
-    <ProjectReference Include="..\..\..\src\Orders\Orders.Application\Orders.Application.csproj" />
+    <ProjectReference Include="..\..\..\src\Orders\Orders.Api\Orders.Api.csproj" />
   </ItemGroup>
 </Project>

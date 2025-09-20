@@ -1,5 +1,5 @@
+using ProductCatalog.Api.Exceptions;
 using ProductCatalog.Api.Responses;
-using ProductCatalog.Domain.Exceptions;
 using System.Net;
 using System.Text.Json;
 

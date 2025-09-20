@@ -1,4 +1,4 @@
-namespace ProductCatalog.Domain.Exceptions
+namespace ProductCatalog.Api.Exceptions
 {
     public class ProductOutOfStockException : ProductCatalogException
     {

@@ -1,17 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace Orders.Infrastructure.Data.Context
+namespace Orders.Api.Persistence
 {
-    public class OrdersDbContext : DbContext
+    public class AppDbContext : DbContext
     {
-        public OrdersDbContext(DbContextOptions<OrdersDbContext> options) : base(options)
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
         }
     }
 }

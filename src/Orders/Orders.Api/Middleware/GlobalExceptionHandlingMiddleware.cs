@@ -1,5 +1,5 @@
+using Orders.Api.Exceptions;
 using Orders.Api.Responses;
-using Orders.Domain.Exceptions;
 using System.Net;
 using System.Text.Json;
 
@@ -9,6 +9,10 @@ namespace Orders.Api.Middleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
+        private static readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
         public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger)
         {
@@ -37,12 +41,7 @@ namespace Orders.Api.Middleware
             var errorResponse = CreateErrorResponse(context, exception);
             response.StatusCode = errorResponse.Status;
 
-            var jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            };
-
-            var jsonResponse = JsonSerializer.Serialize(errorResponse, jsonOptions);
+            var jsonResponse = JsonSerializer.Serialize(errorResponse, _jsonOptions);
             await response.WriteAsync(jsonResponse);
         }
 

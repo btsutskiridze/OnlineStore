@@ -1,4 +1,4 @@
-namespace Orders.Domain.Exceptions
+namespace Orders.Api.Exceptions
 {
     public class InsufficientStockException : OrdersException
     {

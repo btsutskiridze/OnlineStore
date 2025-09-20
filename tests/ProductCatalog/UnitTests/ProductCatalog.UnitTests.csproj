@@ -15,7 +15,6 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\ProductCatalog\ProductCatalog.Domain\ProductCatalog.Domain.csproj" />
-    <ProjectReference Include="..\..\..\src\ProductCatalog\ProductCatalog.Application\ProductCatalog.Application.csproj" />
+    <ProjectReference Include="..\..\..\src\ProductCatalog\ProductCatalog.Api\ProductCatalog.Api.csproj" />
   </ItemGroup>
 </Project>

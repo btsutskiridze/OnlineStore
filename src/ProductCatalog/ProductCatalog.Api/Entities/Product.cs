@@ -1,4 +1,4 @@
-﻿namespace ProductCatalog.Domain.Entities
+﻿namespace ProductCatalog.Api.Entities
 {
     public class Product
     {
@@ -9,6 +9,7 @@
         public int StockQuantity { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public byte[] RowVersion { get; set; }
     }
 }

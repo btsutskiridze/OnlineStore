@@ -2,14 +2,14 @@ using ProductCatalog.Api.Middleware;
 
 namespace ProductCatalog.Api.Extensions
 {
-    public static class ApplicationExtensions
+    public static class ServiceExtensions
     {
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddControllers();
             services.AddOptionsConfiguration(configuration);
             services.AddHttpClients(configuration);
-            services.AddApplicationLayerServices(configuration);
+            services.AddExternalServiceClients(configuration);
 
             return services;
         }
@@ -30,10 +30,11 @@ namespace ProductCatalog.Api.Extensions
             return services;
         }
 
-        public static IServiceCollection AddApplicationLayerServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddExternalServiceClients(this IServiceCollection services, IConfiguration configuration)
         {
             return services;
         }
+
 
         public static WebApplication UseGlobalExceptionHandling(this WebApplication app)
         {

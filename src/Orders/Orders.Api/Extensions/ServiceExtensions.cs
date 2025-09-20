@@ -2,14 +2,14 @@ using Orders.Api.Middleware;
 
 namespace Orders.Api.Extensions
 {
-    public static class ApplicationExtensions
+    public static class ServiceExtensions
     {
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddControllers();
             services.AddOptionsConfiguration(configuration);
             services.AddHttpClients(configuration);
-            services.AddApplicationLayerServices(configuration);
+            services.AddExternalServiceClients(configuration);
 
             return services;
         }
@@ -30,7 +30,7 @@ namespace Orders.Api.Extensions
             return services;
         }
 
-        public static IServiceCollection AddApplicationLayerServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddExternalServiceClients(this IServiceCollection services, IConfiguration configuration)
         {
             return services;
         }
