@@ -53,7 +53,7 @@ namespace ProductCatalog.Api.Persistence.Migrations
                     b.HasIndex("IdempotencyKey")
                         .IsUnique();
 
-                    b.ToTable("TB_InventoryOperation", "catalog");
+                    b.ToTable("TB_InventoryOperations", "catalog");
                 });
 
             modelBuilder.Entity("ProductCatalog.Api.Entities.Product", b =>
@@ -106,7 +106,7 @@ namespace ProductCatalog.Api.Persistence.Migrations
                     b.HasIndex("SKU")
                         .IsUnique();
 
-                    b.ToTable("TB_Product", "catalog");
+                    b.ToTable("TB_Products", "catalog");
                 });
 #pragma warning restore 612, 618
         }

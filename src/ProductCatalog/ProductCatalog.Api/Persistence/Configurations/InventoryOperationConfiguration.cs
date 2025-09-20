@@ -9,7 +9,7 @@ namespace ProductCatalog.Api.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<InventoryOperation> builder)
         {
-            builder.ToTable("TB_InventoryOperation", "catalog");
+            builder.ToTable("TB_InventoryOperations", "catalog");
 
             builder.HasKey(it => it.Id).IsClustered();
 

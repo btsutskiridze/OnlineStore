@@ -12,7 +12,7 @@ using ProductCatalog.Api.Persistence;
 namespace ProductCatalog.Api.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250920195419_InitialCreate")]
+    [Migration("20250920204936_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -56,7 +56,7 @@ namespace ProductCatalog.Api.Persistence.Migrations
                     b.HasIndex("IdempotencyKey")
                         .IsUnique();
 
-                    b.ToTable("TB_InventoryOperation", "catalog");
+                    b.ToTable("TB_InventoryOperations", "catalog");
                 });
 
             modelBuilder.Entity("ProductCatalog.Api.Entities.Product", b =>
@@ -109,7 +109,7 @@ namespace ProductCatalog.Api.Persistence.Migrations
                     b.HasIndex("SKU")
                         .IsUnique();
 
-                    b.ToTable("TB_Product", "catalog");
+                    b.ToTable("TB_Products", "catalog");
                 });
 #pragma warning restore 612, 618
         }

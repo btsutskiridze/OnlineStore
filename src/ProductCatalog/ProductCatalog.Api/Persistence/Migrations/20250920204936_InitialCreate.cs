@@ -14,7 +14,7 @@ namespace ProductCatalog.Api.Persistence.Migrations
                 name: "catalog");
 
             migrationBuilder.CreateTable(
-                name: "TB_InventoryOperation",
+                name: "TB_InventoryOperations",
                 schema: "catalog",
                 columns: table => new
                 {
@@ -26,12 +26,12 @@ namespace ProductCatalog.Api.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TB_InventoryOperation", x => x.Id)
+                    table.PrimaryKey("PK_TB_InventoryOperations", x => x.Id)
                         .Annotation("SqlServer:Clustered", true);
                 });
 
             migrationBuilder.CreateTable(
-                name: "TB_Product",
+                name: "TB_Products",
                 schema: "catalog",
                 columns: table => new
                 {
@@ -48,21 +48,21 @@ namespace ProductCatalog.Api.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TB_Product", x => x.Id)
+                    table.PrimaryKey("PK_TB_Products", x => x.Id)
                         .Annotation("SqlServer:Clustered", true);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_TB_InventoryOperation_IdempotencyKey",
+                name: "IX_TB_InventoryOperations_IdempotencyKey",
                 schema: "catalog",
-                table: "TB_InventoryOperation",
+                table: "TB_InventoryOperations",
                 column: "IdempotencyKey",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_TB_Product_SKU",
+                name: "IX_TB_Products_SKU",
                 schema: "catalog",
-                table: "TB_Product",
+                table: "TB_Products",
                 column: "SKU",
                 unique: true);
         }
@@ -71,11 +71,11 @@ namespace ProductCatalog.Api.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "TB_InventoryOperation",
+                name: "TB_InventoryOperations",
                 schema: "catalog");
 
             migrationBuilder.DropTable(
-                name: "TB_Product",
+                name: "TB_Products",
                 schema: "catalog");
         }
     }

@@ -8,7 +8,7 @@ namespace ProductCatalog.Api.EntityConfigs.Configurations
     {
         public void Configure(EntityTypeBuilder<Product> builder)
         {
-            builder.ToTable("TB_Product", "catalog");
+            builder.ToTable("TB_Products", "catalog");
 
             builder.HasKey(p => p.Id).IsClustered();
 
