@@ -9,8 +9,8 @@ namespace ProductCatalog.Api.Services.Contracts
         Task<ProductDetailsDto> GetProductById(int productId, CancellationToken ct);
         Task<ProductDetailsDto> CreateProduct(ProductCreateDto newProduct, CancellationToken ct);
         Task<ProductDetailsDto> UpdateProduct(int productId, ProductUpdateDto updatedProduct, CancellationToken ct);
-        Task DecrementStockBatch(string IdempotencyKey, IReadOnlyCollection<ProductQuantityItemDto> items, CancellationToken ct);
-        Task ReplenishStockBatch(string IdempotencyKey, IReadOnlyCollection<ProductQuantityItemDto> items, CancellationToken ct);
-        Task ValidateProducts(string IdempotencyKey, IReadOnlyCollection<ProductQuantityItemDto> items, CancellationToken ct);
+        Task DecrementStockBatch(string IdempotencyKey, IReadOnlyList<ProductQuantityItemDto> items, CancellationToken ct);
+        Task ReplenishStockBatch(string IdempotencyKey, IReadOnlyList<ProductQuantityItemDto> items, CancellationToken ct);
+        Task<IReadOnlyList<ProductValidationResultDto>> ValidateProducts(IReadOnlyList<ProductQuantityItemDto> items, CancellationToken ct);
     }
 }

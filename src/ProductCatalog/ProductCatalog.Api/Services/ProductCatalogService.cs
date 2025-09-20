@@ -189,7 +189,7 @@ namespace ProductCatalog.Api.Services
 
         public async Task DecrementStockBatch(
             string idempotencyKey,
-            IReadOnlyCollection<ProductQuantityItemDto> items,
+            IReadOnlyList<ProductQuantityItemDto> items,
             CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(idempotencyKey))
@@ -268,7 +268,7 @@ namespace ProductCatalog.Api.Services
 
         public async Task ReplenishStockBatch(
             string idempotencyKey,
-            IReadOnlyCollection<ProductQuantityItemDto> items,
+            IReadOnlyList<ProductQuantityItemDto> items,
             CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(idempotencyKey))
@@ -343,5 +343,63 @@ namespace ProductCatalog.Api.Services
         {
             return ex.InnerException is SqlException sql && (sql.Number == 2601 || sql.Number == 2627);
         }
+
+        public async Task<IReadOnlyList<ProductValidationResultDto>> ValidateProducts(IReadOnlyList<ProductQuantityItemDto> items, CancellationToken ct)
+        {
+            if (items is null || items.Count == 0)
+                throw new ProductCatalogException("No items to validate.");
+            if (items.Any(i => i.Quantity <= 0))
+                throw new ProductCatalogException("Quantities must be positive.");
+
+            var distinct = items
+                .GroupBy(i => i.ProductId)
+                .Select(g => new { ProductId = g.Key, Quantity = g.Sum(x => x.Quantity) })
+                .ToList();
+
+            var ids = distinct.Select(d => d.ProductId).ToList();
+
+            var snapshot = await _db.Products
+                .AsNoTracking()
+                .Where(p => ids.Contains(p.Id))
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.SKU,
+                    p.Price,
+                    p.StockQuantity,
+                    p.IsActive
+                })
+                .ToDictionaryAsync(p => p.Id, ct);
+
+            var results = new List<ProductValidationResultDto>(distinct.Count);
+
+            foreach (var d in distinct)
+            {
+                if (!snapshot.TryGetValue(d.ProductId, out var p))
+                {
+                    results.Add(new ProductValidationResultDto
+                    {
+                        ProductId = d.ProductId,
+                        CanFulfill = false
+                    });
+                    continue;
+                }
+
+                var canFullfill = p.IsActive && p.StockQuantity >= d.Quantity;
+
+                results.Add(new ProductValidationResultDto
+                {
+                    ProductId = d.ProductId,
+                    CanFulfill = canFullfill,
+                    Name = p.Name,
+                    Sku = p.SKU,
+                    Price = p.Price
+                });
+            }
+
+            return results;
+        }
+
     }
 }

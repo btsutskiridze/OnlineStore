@@ -56,7 +56,16 @@ namespace ProductCatalog.Api.Controllers
         }
 
         [Authorize(Policy = "InterServiceAccessOnly")]
-        [HttpPost("stock/decrement-bulk")]
+        [HttpPost("validate")]
+        public async Task<ActionResult> Validate([FromBody] IReadOnlyList<ProductQuantityItemDto> items, CancellationToken ct)
+        {
+            await _productCatalogService.ValidateProducts(items, ct);
+
+            return NoContent();
+        }
+
+        [Authorize(Policy = "InterServiceAccessOnly")]
+        [HttpPost("stock/decrement-batch")]
         public async Task<ActionResult> Decrement(
             [FromHeader(Name = "Idempotency-Key")] string idempotencykey,
             [FromBody] IReadOnlyList<ProductQuantityItemDto> items,
@@ -68,7 +77,7 @@ namespace ProductCatalog.Api.Controllers
         }
 
         [Authorize(Policy = "InterServiceAccessOnly")]
-        [HttpPost("stock/replenish-bulk")]
+        [HttpPost("stock/replenish-batch")]
         public async Task<ActionResult> Replenish(
             [FromHeader(Name = "Idempotency-Key")] string idempotencykey,
             [FromBody] IReadOnlyList<ProductQuantityItemDto> items,
