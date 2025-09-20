@@ -2,7 +2,7 @@
 
 namespace ProductCatalog.Api.Dtos
 {
-    public class StockChangeItemDto
+    public class ProductQuantityItemDto
     {
         [Required]
         public int ProductId { get; set; }

@@ -23,7 +23,7 @@ namespace ProductCatalog.Api.Controllers
         [HttpGet]
         public async Task<ActionResult> List([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default!)
         {
-            var products = await _productCatalogService.GetAllProductsAsync(page, pageSize, ct);
+            var products = await _productCatalogService.GetAllProducts(page, pageSize, ct);
 
             return Ok(products);
         }
@@ -32,7 +32,7 @@ namespace ProductCatalog.Api.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult> Details(int id, CancellationToken ct)
         {
-            var product = await _productCatalogService.GetProductByIdAsync(id, ct);
+            var product = await _productCatalogService.GetProductById(id, ct);
 
             return Ok(product);
         }
@@ -41,7 +41,7 @@ namespace ProductCatalog.Api.Controllers
         [HttpPost]
         public async Task<ActionResult> Create([FromBody] ProductCreateDto dto, CancellationToken ct)
         {
-            var createdProduct = await _productCatalogService.CreateProductAsync(dto, ct);
+            var createdProduct = await _productCatalogService.CreateProduct(dto, ct);
 
             return CreatedAtAction(nameof(Details), new { id = createdProduct.Id }, createdProduct);
         }
@@ -50,7 +50,7 @@ namespace ProductCatalog.Api.Controllers
         [HttpPatch("{id:int}")]
         public async Task<ActionResult> Update(int id, [FromBody] ProductUpdateDto dto, CancellationToken ct)
         {
-            var updatedProduct = await _productCatalogService.UpdateProductAsync(id, dto, ct);
+            var updatedProduct = await _productCatalogService.UpdateProduct(id, dto, ct);
 
             return Ok(updatedProduct);
         }
@@ -59,10 +59,10 @@ namespace ProductCatalog.Api.Controllers
         [HttpPost("stock/decrement-bulk")]
         public async Task<ActionResult> Decrement(
             [FromHeader(Name = "Idempotency-Key")] string idempotencykey,
-            [FromBody] IReadOnlyList<StockChangeItemDto> items,
+            [FromBody] IReadOnlyList<ProductQuantityItemDto> items,
             CancellationToken ct)
         {
-            await _productCatalogService.DecrementStockBulkAsync(idempotencykey, items, ct);
+            await _productCatalogService.DecrementStockBatch(idempotencykey, items, ct);
 
             return NoContent();
         }
@@ -71,10 +71,10 @@ namespace ProductCatalog.Api.Controllers
         [HttpPost("stock/replenish-bulk")]
         public async Task<ActionResult> Replenish(
             [FromHeader(Name = "Idempotency-Key")] string idempotencykey,
-            [FromBody] IReadOnlyList<StockChangeItemDto> items,
+            [FromBody] IReadOnlyList<ProductQuantityItemDto> items,
             CancellationToken ct)
         {
-            await _productCatalogService.ReplenishStocksAsync(idempotencykey, items, ct);
+            await _productCatalogService.ReplenishStockBatch(idempotencykey, items, ct);
 
             return NoContent();
         }

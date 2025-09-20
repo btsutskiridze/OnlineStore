@@ -24,7 +24,7 @@ namespace ProductCatalog.Api.Services
             _retryPipelineProvider = retryPipelineProvider;
         }
 
-        public async Task<PagedResponse<ProductListItemDto>> GetAllProductsAsync(int pageNumber, int pageSize, CancellationToken ct)
+        public async Task<PagedResponse<ProductListItemDto>> GetAllProducts(int pageNumber, int pageSize, CancellationToken ct)
         {
             pageNumber = pageNumber <= 0 ? 1 : pageNumber;
             pageSize = pageSize <= 0 ? 20 : (pageSize > 100 ? 100 : pageSize);
@@ -64,7 +64,7 @@ namespace ProductCatalog.Api.Services
             };
         }
 
-        public async Task<ProductDetailsDto> GetProductByIdAsync(int productId, CancellationToken ct)
+        public async Task<ProductDetailsDto> GetProductById(int productId, CancellationToken ct)
         {
             var dto = await _db.Products
                 .AsNoTracking()
@@ -86,7 +86,7 @@ namespace ProductCatalog.Api.Services
             return dto;
         }
 
-        public async Task<ProductDetailsDto> CreateProductAsync(ProductCreateDto dto, CancellationToken cancellationToken)
+        public async Task<ProductDetailsDto> CreateProduct(ProductCreateDto dto, CancellationToken cancellationToken)
         {
             var normalizedSku = dto.SKU.Trim();
 
@@ -129,7 +129,7 @@ namespace ProductCatalog.Api.Services
             };
         }
 
-        public async Task<ProductDetailsDto> UpdateProductAsync(int productId, ProductUpdateDto dto, CancellationToken ct)
+        public async Task<ProductDetailsDto> UpdateProduct(int productId, ProductUpdateDto dto, CancellationToken ct)
         {
             var entity = await _db.Products.FirstOrDefaultAsync(p => p.Id == productId, ct)
                 ?? throw new ProductNotFoundException(productId);
@@ -187,9 +187,9 @@ namespace ProductCatalog.Api.Services
             };
         }
 
-        public async Task DecrementStockBulkAsync(
+        public async Task DecrementStockBatch(
             string idempotencyKey,
-            IReadOnlyCollection<StockChangeItemDto> items,
+            IReadOnlyCollection<ProductQuantityItemDto> items,
             CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(idempotencyKey))
@@ -201,7 +201,7 @@ namespace ProductCatalog.Api.Services
 
             var distinctItems = items
                 .GroupBy(i => i.ProductId)
-                .Select(g => new StockChangeItemDto { ProductId = g.Key, Quantity = g.Sum(x => x.Quantity) })
+                .Select(g => new ProductQuantityItemDto { ProductId = g.Key, Quantity = g.Sum(x => x.Quantity) })
                 .OrderBy(x => x.ProductId).ToList();
 
             var retryPipeline = _retryPipelineProvider.GetPipeline(ResiliencePipelines.ProductStockChange);
@@ -213,7 +213,7 @@ namespace ProductCatalog.Api.Services
 
         private async Task DecrementStockInternalAsync(
             string idempotencyKey,
-            List<StockChangeItemDto> items,
+            List<ProductQuantityItemDto> items,
             CancellationToken ct)
         {
             using var scope = _serviceProvider.CreateScope();
@@ -266,9 +266,9 @@ namespace ProductCatalog.Api.Services
             await transaction.CommitAsync(ct);
         }
 
-        public async Task ReplenishStocksAsync(
+        public async Task ReplenishStockBatch(
             string idempotencyKey,
-            IReadOnlyCollection<StockChangeItemDto> items,
+            IReadOnlyCollection<ProductQuantityItemDto> items,
             CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(idempotencyKey))
@@ -280,7 +280,7 @@ namespace ProductCatalog.Api.Services
 
             var distinctItems = items
                 .GroupBy(i => i.ProductId)
-                .Select(g => new StockChangeItemDto { ProductId = g.Key, Quantity = g.Sum(x => x.Quantity) })
+                .Select(g => new ProductQuantityItemDto { ProductId = g.Key, Quantity = g.Sum(x => x.Quantity) })
                 .OrderBy(x => x.ProductId).ToList();
 
             var retryPipeline = _retryPipelineProvider.GetPipeline(ResiliencePipelines.ProductStockChange);
@@ -291,7 +291,7 @@ namespace ProductCatalog.Api.Services
         }
 
         private async Task ReplenishStockInternalAsync(string idempotencyKey,
-            List<StockChangeItemDto> items,
+            List<ProductQuantityItemDto> items,
             CancellationToken ct)
         {
             using var scope = _serviceProvider.CreateScope();
