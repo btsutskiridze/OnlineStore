@@ -16,11 +16,14 @@ namespace Orders.Api.Extensions
 
         private static IServiceCollection AddOptionsConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
-            services.Configure<Options.JwtTokenValidationOptions>(
-                configuration.GetSection("JwtTokenValidation"));
+            services.Configure<Options.JwtOptions>(
+                configuration.GetSection("Jwt"));
 
-            services.Configure<Options.OutboundServiceAuthentication>(
-                configuration.GetSection("OutboundServiceAuthentication"));
+            services.Configure<Options.ServicesOptions>(
+                configuration.GetSection("Services"));
+
+            services.Configure<Options.ServiceAuthOptions>(
+                configuration.GetSection("ServiceAuth"));
 
             return services;
         }

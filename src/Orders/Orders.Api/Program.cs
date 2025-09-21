@@ -6,7 +6,6 @@ builder.Services
     .AddApiServices(builder.Configuration)
     .AddDatabaseServices(builder.Configuration)
     .AddJwtAuthentication(builder.Configuration)
-    .AddCustomAuthorization()
     .AddCustomSwagger();
 
 var app = builder.Build();

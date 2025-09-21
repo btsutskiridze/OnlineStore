@@ -13,12 +13,12 @@ namespace Auth.Api.Controllers
     [Route("[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly JwtTokenConfigurationOptions _jwtConfig;
-        private readonly InterServiceAuthenticationOptions _authConfig;
+        private readonly JwtOptions _jwtConfig;
+        private readonly ServiceAuthOptions _authConfig;
 
         public AuthController(
-            IOptions<JwtTokenConfigurationOptions> jwtConfig,
-            IOptions<InterServiceAuthenticationOptions> authConfig)
+            IOptions<JwtOptions> jwtConfig,
+            IOptions<ServiceAuthOptions> authConfig)
         {
             _jwtConfig = jwtConfig.Value;
             _authConfig = authConfig.Value;
@@ -62,12 +62,12 @@ namespace Auth.Api.Controllers
             [FromHeader(Name = "X-Client-Secret")] string clientSecret,
             [FromHeader(Name = "X-Audience")] string targetService)
         {
-            var client = _authConfig.AuthorizedClients.SingleOrDefault(c => c.ClientId == clientId && c.ClientSecret == clientSecret);
+            var client = _authConfig.Clients.SingleOrDefault(c => c.ClientId == clientId && c.ClientSecret == clientSecret);
 
             if (client is null)
                 return Unauthorized();
 
-            if (!client.AllowedTargetServices.Contains(targetService))
+            if (!client.AllowedAudiences.Contains(targetService))
                 return BadRequest("Client not authorized for target service");
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfig.SigningKey));
@@ -76,11 +76,6 @@ namespace Auth.Api.Controllers
             var claims = new List<Claim> {
                 new("client_id", client.ClientId)
             };
-
-            foreach (var permission in client.GrantedPermissions)
-            {
-                claims.Add(new("permission", permission));
-            }
 
             var jwt = new JwtSecurityToken(
                 issuer: _jwtConfig.Issuer,

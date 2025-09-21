@@ -10,10 +10,8 @@ namespace Orders.Api.Extensions
     {
         public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
-            var jwtOptions = configuration.GetSection("JwtTokenValidation").Get<JwtTokenValidationOptions>()
-                ?? throw new InvalidOperationException("JwtTokenValidation configuration section is missing");
-
-            services.Configure<JwtTokenValidationOptions>(configuration.GetSection("JwtTokenValidation"));
+            var jwtOptions = configuration.GetSection("Jwt").Get<JwtOptions>()
+                ?? throw new InvalidOperationException("Jwt configuration section is missing");
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -28,19 +26,6 @@ namespace Orders.Api.Extensions
                         ValidAudiences = jwtOptions.AcceptedAudiences,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
                     };
-                });
-
-            return services;
-        }
-
-        public static IServiceCollection AddCustomAuthorization(this IServiceCollection services)
-        {
-            services.AddAuthorizationBuilder()
-                .AddPolicy("PublicUserAccess", policy =>
-                {
-                    policy.RequireAssertion(context =>
-                        context.User.Claims.Any(claim => claim.Type == "aud" && claim.Value == "OnlineStore") &&
-                        context.User.Claims.Any(claim => claim.Type == ClaimTypes.Role));
                 });
 
             return services;

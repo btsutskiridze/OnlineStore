@@ -1,9 +1,9 @@
-namespace Orders.Api.Options
+namespace Auth.Api.Options
 {
-    public class JwtTokenValidationOptions
+    public class JwtOptions
     {
         public string Issuer { get; set; } = string.Empty;
-        public List<string> AcceptedAudiences { get; set; } = new();
+        public string Audience { get; set; } = string.Empty;
         public string SigningKey { get; set; } = string.Empty;
     }
 }

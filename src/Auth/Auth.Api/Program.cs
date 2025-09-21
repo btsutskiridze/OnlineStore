@@ -2,10 +2,10 @@ using Auth.Api.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<JwtTokenConfigurationOptions>(
-    builder.Configuration.GetSection("JwtTokenConfiguration"));
-builder.Services.Configure<InterServiceAuthenticationOptions>(
-    builder.Configuration.GetSection("InterServiceAuthentication"));
+builder.Services.Configure<JwtOptions>(
+    builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<ServiceAuthOptions>(
+    builder.Configuration.GetSection("ServiceAuth"));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

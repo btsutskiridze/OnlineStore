@@ -20,11 +20,11 @@ namespace ProductCatalog.Api.Extensions
 
         private static IServiceCollection AddOptionsConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
-            services.Configure<Options.JwtTokenValidationOptions>(
-                configuration.GetSection("JwtTokenValidation"));
+            services.Configure<Options.JwtOptions>(
+                configuration.GetSection("Jwt"));
 
-            services.Configure<Options.InboundServiceAuthorizationOptions>(
-                configuration.GetSection("InboundServiceAuthorization"));
+            services.Configure<Options.InboundServiceAuthOptions>(
+                configuration.GetSection("InboundServiceAuth"));
 
             return services;
         }

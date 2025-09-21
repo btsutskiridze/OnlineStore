@@ -1,9 +1,11 @@
-namespace Auth.Api.Options
+namespace ProductCatalog.Api.Options
 {
-    public class JwtTokenConfigurationOptions
+    public class JwtOptions
     {
         public string Issuer { get; set; } = string.Empty;
-        public string Audience { get; set; } = string.Empty;
+        public List<string> AcceptedAudiences { get; set; } = new();
         public string SigningKey { get; set; } = string.Empty;
     }
 }
+
+

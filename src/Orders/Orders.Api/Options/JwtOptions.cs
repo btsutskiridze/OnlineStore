@@ -1,6 +1,6 @@
-namespace ProductCatalog.Api.Options
+namespace Orders.Api.Options
 {
-    public class JwtTokenValidationOptions
+    public class JwtOptions
     {
         public string Issuer { get; set; } = string.Empty;
         public List<string> AcceptedAudiences { get; set; } = new();

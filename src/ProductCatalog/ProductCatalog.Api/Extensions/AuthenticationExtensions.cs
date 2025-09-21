@@ -9,8 +9,8 @@ namespace ProductCatalog.Api.Extensions
     {
         public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
-            var jwtOptions = configuration.GetSection("JwtTokenValidation").Get<JwtTokenValidationOptions>()
-                ?? throw new InvalidOperationException("JwtTokenValidation configuration section is missing");
+            var jwtOptions = configuration.GetSection("Jwt").Get<JwtOptions>()
+                ?? throw new InvalidOperationException("Jwt configuration section is missing");
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -32,19 +32,15 @@ namespace ProductCatalog.Api.Extensions
 
         public static IServiceCollection AddCustomAuthorization(this IServiceCollection services, IConfiguration configuration)
         {
-            var authOptions = configuration.GetSection("InboundServiceAuthorization").Get<InboundServiceAuthorizationOptions>()
-                ?? throw new InvalidOperationException("InboundServiceAuthorization configuration section is missing");
-
-            var interServiceConfig = authOptions.InterServiceAccess;
+            var authOptions = configuration.GetSection("InboundServiceAuth").Get<InboundServiceAuthOptions>()
+                ?? throw new InvalidOperationException("InboundServiceAuth configuration section is missing");
 
             services.AddAuthorizationBuilder()
                 .AddPolicy(Policies.InterServiceAccessOnly, policy =>
                 {
                     policy.RequireAssertion(context =>
-                        context.User.Claims.Any(claim => claim.Type == "aud" && claim.Value == interServiceConfig.RequiredServiceAudience) &&
-                        context.User.Claims.Any(claim => claim.Type == "client_id" && claim.Value == interServiceConfig.AuthorizedClientId) &&
-                        interServiceConfig.RequiredPermissions.Any(permission =>
-                            context.User.Claims.Any(claim => claim.Type == "permission" && claim.Value == permission))
+                        context.User.Claims.Any(claim => claim.Type == "aud" && claim.Value == authOptions.Audience) &&
+                        context.User.Claims.Any(claim => claim.Type == "client_id" && authOptions.AllowedClientIds.Contains(claim.Value))
                     );
                 });
 
