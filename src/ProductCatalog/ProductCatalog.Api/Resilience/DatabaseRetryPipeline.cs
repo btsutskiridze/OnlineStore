@@ -38,7 +38,7 @@ namespace ProductCatalog.Api.Resilience
         {
             return new TimeoutStrategyOptions
             {
-                Timeout = TimeSpan.FromSeconds(8)
+                Timeout = TimeSpan.FromSeconds(45)
             };
         }
 

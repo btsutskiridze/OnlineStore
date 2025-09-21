@@ -19,7 +19,7 @@ namespace ProductCatalog.Api.Extensions
                     configuration.GetConnectionString("DefaultConnection"),
                     sql =>
                     {
-                        sql.CommandTimeout(6);
+                        sql.CommandTimeout(30);
                         sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     }
                 )
