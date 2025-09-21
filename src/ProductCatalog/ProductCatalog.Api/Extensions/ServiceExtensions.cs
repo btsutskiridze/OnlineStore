@@ -14,8 +14,6 @@ namespace ProductCatalog.Api.Extensions
             services.AddOptionsConfiguration(configuration);
             services.AddResiliencePipelines();
             services.AddInternalServices();
-            services.AddHttpClients(configuration);
-            services.AddExternalServiceClients(configuration);
 
             return services;
         }
@@ -33,24 +31,16 @@ namespace ProductCatalog.Api.Extensions
 
         private static IServiceCollection AddInternalServices(this IServiceCollection services)
         {
-            services.AddScoped<IProductCatalogService, ProductCatalogService>();
+            services.AddScoped<IProductManagementService, ProductManagementService>();
+            services.AddScoped<IProductValidationService, ProductValidationService>();
+            services.AddScoped<IProductStockService, ProductStockService>();
 
-            return services;
-        }
-
-        private static IServiceCollection AddHttpClients(this IServiceCollection services, IConfiguration configuration)
-        {
-            return services;
-        }
-
-        public static IServiceCollection AddExternalServiceClients(this IServiceCollection services, IConfiguration configuration)
-        {
             return services;
         }
 
         public static IServiceCollection AddResiliencePipelines(this IServiceCollection services)
         {
-            services.AddResiliencePipeline(ResiliencePipelines.ProductStockChange, ProductStockChangeRetryPipeline.Configure);
+            services.AddResiliencePipeline(ResiliencePipelines.DatabaseOperations, DatabaseRetryPipeline.Configure);
 
             return services;
         }

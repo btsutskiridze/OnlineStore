@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ProductCatalog.Api.Entities;
-using ProductCatalog.Api.Enums;
 
 namespace ProductCatalog.Api.Persistence.Configurations
 {
@@ -22,8 +21,7 @@ namespace ProductCatalog.Api.Persistence.Configurations
             builder.Property(it => it.Type)
                 .HasConversion<byte>()
                 .HasColumnType("TINYINT")
-                .IsRequired()
-                .HasDefaultValue(InventoryOperationType.Decrement);
+                .IsRequired();
 
             builder.Property(it => it.CreatedAt)
                 .IsRequired()

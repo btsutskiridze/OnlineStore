@@ -48,7 +48,7 @@ namespace Auth.Api.Controllers
                 audience: _jwtConfig.Audience,
                 claims: claims,
                 notBefore: DateTime.UtcNow.AddMinutes(-1),
-                expires: DateTime.UtcNow.AddHours(8),
+                expires: DateTime.UtcNow.AddDays(10),
                 signingCredentials: creds
             );
 
@@ -87,7 +87,7 @@ namespace Auth.Api.Controllers
                 audience: targetService,
                 claims: claims,
                 notBefore: DateTime.UtcNow.AddMinutes(-1),
-                expires: DateTime.UtcNow.AddMinutes(30),
+                expires: DateTime.UtcNow.AddDays(10),
                 signingCredentials: creds
             );
 

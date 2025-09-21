@@ -2,12 +2,15 @@ using ProductCatalog.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Connection", LogLevel.Debug);
+
 builder.Services
     .AddApiServices(builder.Configuration)
     .AddDatabaseServices(builder.Configuration)
     .AddJwtAuthentication(builder.Configuration)
     .AddCustomAuthorization(builder.Configuration)
     .AddCustomSwagger();
+
 
 var app = builder.Build();
 

@@ -38,7 +38,7 @@ namespace ProductCatalog.Api.Extensions
             var interServiceConfig = authOptions.InterServiceAccess;
 
             services.AddAuthorizationBuilder()
-                .AddPolicy("InterServiceAccessOnly", policy =>
+                .AddPolicy(Policies.InterServiceAccessOnly, policy =>
                 {
                     policy.RequireAssertion(context =>
                         context.User.Claims.Any(claim => claim.Type == "aud" && claim.Value == interServiceConfig.RequiredServiceAudience) &&
