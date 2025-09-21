@@ -1,12 +1,12 @@
 namespace Orders.Api.Exceptions
 {
-    public abstract class OrdersException : Exception
+    public class OrdersException : Exception
     {
-        protected OrdersException(string message) : base(message)
+        public OrdersException(string message) : base(message)
         {
         }
 
-        protected OrdersException(string message, Exception innerException) : base(message, innerException)
+        public OrdersException(string message, Exception innerException) : base(message, innerException)
         {
         }
     }

@@ -136,8 +136,6 @@ namespace ProductCatalog.Api.Services
                 CreatedAt = DateTime.UtcNow
             });
 
-            Console.WriteLine($"Creating inventory operation with IdempotencyKey: {idempotencyKey}, Type: {operationType}");
-
             await db.SaveChangesAsync(ct);
         }
 

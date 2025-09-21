@@ -82,7 +82,7 @@ namespace Auth.Api.Controllers
                 audience: targetService,
                 claims: claims,
                 notBefore: DateTime.UtcNow.AddMinutes(-1),
-                expires: DateTime.UtcNow.AddDays(10),
+                expires: DateTime.UtcNow.AddMinutes(client.TokenExpiryMinutes),
                 signingCredentials: creds
             );
 
