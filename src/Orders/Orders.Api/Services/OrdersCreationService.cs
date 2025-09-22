@@ -53,7 +53,8 @@ namespace Orders.Api.Services
             catch
             {
                 await HandleOrderValidationFailure(idempotency!, "Stock validation failed", HttpStatusCode.Conflict, ct);
-                throw new OrdersException("Unable to validate product availability.");
+                throw new OrdersException("Order Products validation Failed");
+            }
 
             try
             {
