@@ -5,6 +5,8 @@ using Orders.Api.Middleware;
 using Orders.Api.Options;
 using Orders.Api.Services;
 using Orders.Api.Services.Contracts;
+using Polly;
+using System.Net;
 
 namespace Orders.Api.Extensions
 {
@@ -42,7 +44,9 @@ namespace Orders.Api.Extensions
 
         public static IServiceCollection AddInternalServices(this IServiceCollection services)
         {
-            services.AddScoped<IOrdersService, OrdersService>();
+            services.AddScoped<IOrdersReadService, OrdersReadService>();
+            services.AddScoped<IOrdersCreationService, OrdersCreationService>();
+            services.AddScoped<IOrdersCancellationService, OdersCancellationService>();
             return services;
         }
 
@@ -65,12 +69,19 @@ namespace Orders.Api.Extensions
                 http.BaseAddress = new Uri(opt.ProductCatalog.BaseUrl);
                 http.Timeout = TimeSpan.FromSeconds(10);
             });
-
             pc.AddStandardResilienceHandler(o =>
             {
                 o.AttemptTimeout.Timeout = TimeSpan.FromSeconds(5);
                 o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(12);
                 o.Retry.MaxRetryAttempts = 3;
+                o.Retry.ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+                    .HandleResult(response =>
+                        response.StatusCode == HttpStatusCode.ServiceUnavailable ||
+                        response.StatusCode == HttpStatusCode.GatewayTimeout ||
+                        response.StatusCode == HttpStatusCode.BadGateway ||
+                        response.StatusCode == HttpStatusCode.RequestTimeout ||
+                        response.StatusCode == HttpStatusCode.TooManyRequests)
+                    .Handle<TimeoutException>();
             });
 
             pc.AddHttpMessageHandler<ServiceAuthHandler>();

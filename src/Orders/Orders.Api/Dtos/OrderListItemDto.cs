@@ -2,7 +2,7 @@
 {
     public class OrderListItemDto
     {
-        public int Id { get; init; }
+        public Guid Guid { get; init; }
         public DateTime CreatedAt { get; init; }
         public decimal TotalAmount { get; init; }
         public int ItemCount { get; init; }

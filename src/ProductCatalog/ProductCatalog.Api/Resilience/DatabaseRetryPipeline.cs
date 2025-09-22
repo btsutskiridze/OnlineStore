@@ -25,12 +25,7 @@ namespace ProductCatalog.Api.Resilience
                 MaxDelay = TimeSpan.FromSeconds(2),
                 ShouldHandle = new PredicateBuilder()
                     .Handle<SqlException>(IsTransientSqlException)
-                    .Handle<DbUpdateException>(IsTransientDbUpdateException),
-                OnRetry = args =>
-                {
-                    Console.WriteLine($"Retry attempt {args.AttemptNumber} for database operation. Exception: {args.Outcome.Exception?.Message}");
-                    return ValueTask.CompletedTask;
-                }
+                    .Handle<DbUpdateException>(IsTransientDbUpdateException)
             };
         }
 

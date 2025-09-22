@@ -15,9 +15,26 @@ namespace Orders.Api.Extensions
         private static IServiceCollection AddDataContext(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(
+                    configuration.GetConnectionString("DefaultConnection"),
+                    sql =>
+                    {
+                        sql.CommandTimeout(30);
+                        sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                    }
+                )
+            );
 
             return services;
+        }
+
+        public static WebApplication InitializeDatabase(this WebApplication app)
+        {
+            using var scope = app.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            dbContext.Database.Migrate();
+
+            return app;
         }
     }
 }

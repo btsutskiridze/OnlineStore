@@ -3,8 +3,6 @@
     public static class UserRoles
     {
         public const string User = "User";
-        public const string Admin = "Admin";
-        public const string AdminOrUser = $"{Admin},{User}";
     }
 
     public static class SqlErrorCodes
