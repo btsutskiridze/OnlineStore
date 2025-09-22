@@ -21,14 +21,14 @@ namespace Orders.Api.Controllers
         [Authorize(Roles = UserRoles.User)]
         public async Task<IActionResult> CreateOrder(
             [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
-            [FromBody] IReadOnlyList<CreateOrderItemDto> items, CancellationToken ct)
+            [FromBody] IReadOnlyList<ProductQuantityItemDto> items, CancellationToken ct)
         {
             var result = await _ordersService.CreateOrderAsync(
                 idempotencyKey,
                 items,
                 ct);
 
-            return CreatedAtAction(nameof(GetOrderById), new { id = result.Id }, result);
+            return CreatedAtAction(nameof(GetOrderById), new { id = result.Guid }, result);
         }
 
         [HttpGet("{id}")]

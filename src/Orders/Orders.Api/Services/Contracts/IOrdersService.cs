@@ -6,7 +6,7 @@ namespace Orders.Api.Services.Contracts
     {
         Task<OrderDetailsDto> CreateOrderAsync(
             string idempotencyKey,
-            IReadOnlyList<CreateOrderItemDto> items,
+            IReadOnlyList<ProductQuantityItemDto> items,
             CancellationToken ct);
 
         Task<OrderDetailsDto?> GetOrderByIdAsync(int id, CancellationToken ct);

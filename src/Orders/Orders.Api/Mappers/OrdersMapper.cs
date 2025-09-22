@@ -9,7 +9,7 @@ namespace Orders.Api.Mappers
         {
             return new()
             {
-                Id = order.Id,
+                Guid = order.Guid,
                 UserId = order.UserId,
                 TotalAmount = order.TotalAmount,
                 CreatedAt = order.CreatedAt,

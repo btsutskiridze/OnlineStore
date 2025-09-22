@@ -11,6 +11,7 @@ using Orders.Api.Persistence;
 using Orders.Api.Services.Contracts;
 using System.Net;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 
 namespace Orders.Api.Services
@@ -29,57 +30,60 @@ namespace Orders.Api.Services
             _db = dbContext;
         }
 
-        public async Task<OrderDetailsDto> CreateOrderAsync(string idempotencyKey, IReadOnlyList<CreateOrderItemDto> items, CancellationToken ct)
+        public async Task<OrderDetailsDto> CreateOrderAsync(string idempotencyKey, IReadOnlyList<ProductQuantityItemDto> items, CancellationToken ct)
         {
-            if (string.IsNullOrWhiteSpace(idempotencyKey))
-                throw new OrdersException("Idempotency key is required.");
+            ValidateIdempotencyKey(idempotencyKey);
             ValidateProductQuantities(items);
 
-            var distinctItems = items
-                .GroupBy(i => i.ProductId)
-                .Select(g => new CreateOrderItemDto { ProductId = g.Key, Quantity = g.Sum(x => x.Quantity) })
-                .OrderBy(x => x.ProductId)
-                .ToList();
+            var productItems = GetGroupedProductItems(items);
 
-            var requestHash = HashUtils.ComputeSha256Hash(JsonSerializer.Serialize(distinctItems));
+            var requestHash = BuildDeterministicKey(productItems);
 
-            var idempotency = await _db.OrderIdempotencies
+            var idem = await _db.OrderIdempotencies
                 .SingleOrDefaultAsync(x => x.IdempotencyKey == idempotencyKey, ct);
 
-            if (idempotency is not null)
+            if (idem is not null)
             {
-                if (idempotency.RequestHash is not null && !string.Equals(idempotency.RequestHash, requestHash, StringComparison.Ordinal))
+                if (idem.RequestHash is not null && !string.Equals(idem.RequestHash, requestHash, StringComparison.Ordinal))
                     throw new OrdersException("Idempotency key has already been used with different request parameters.");
 
-                switch (idempotency.Status)
+                switch (idem.Status)
                 {
-                    case IdempotencyStatus.Succeeded:
-                        if (string.IsNullOrEmpty(idempotency.ResponseBody))
+                    case IdempotencyStatus.Completed:
+                        if (string.IsNullOrEmpty(idem.ResponseBody) || idem.ResponseCode != (int)HttpStatusCode.Created)
                             throw new OrdersException("Idempotent replay has no stored response.");
-                        if (idempotency.ResponseCode != (int)HttpStatusCode.Created)
-                            throw new OrdersException("Idempotent replay has an invalid response.");
-                        var dto = JsonSerializer.Deserialize<OrderDetailsDto>(idempotency.ResponseBody)!;
-                        return dto;
+
+                        return JsonSerializer.Deserialize<OrderDetailsDto>(idem.ResponseBody)!;
                     case IdempotencyStatus.Failed:
                         throw new OrdersException("The previous operation with the same idempotency key failed.");
-                    case IdempotencyStatus.InProgress:
-                        throw new OrdersException("An operation with the same idempotency key is already in progress. Please try again later.");
-                    default:
-                        throw new OrdersException("Unknown idempotency status.");
+                }
+
+                if (idem.Status == IdempotencyStatus.Started)
+                {
+                    int InFlightWindowSeconds = 45;
+                    var age = DateTime.UtcNow - (idem.UpdatedAt ?? idem.CreatedAt);
+                    if (age < TimeSpan.FromSeconds(InFlightWindowSeconds))
+                    {
+                        throw new OrdersException("Request with this Idempotency-Key is in progress. Please retry.");
+                    }
+
+                    idem.UpdatedAt = DateTime.UtcNow;
+                    await _db.SaveChangesAsync(ct);
                 }
             }
             else
             {
                 try
                 {
-                    idempotency = new()
+                    idem = new()
                     {
                         IdempotencyKey = idempotencyKey,
                         RequestHash = requestHash,
-                        Status = IdempotencyStatus.InProgress,
-                        CreatedAt = DateTime.UtcNow
+                        Status = IdempotencyStatus.Started,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
                     };
-                    _db.OrderIdempotencies.Add(idempotency);
+                    _db.OrderIdempotencies.Add(idem);
                     await _db.SaveChangesAsync(ct);
 
                 }
@@ -89,106 +93,136 @@ namespace Orders.Api.Services
                 }
             }
 
-            var requestForCatalog = distinctItems
-                .Select(i => new ProductQuantityItemDto { ProductId = i.ProductId, Quantity = i.Quantity })
-                .ToList();
+            var validatedProductQuantities = await _productCatalogClient.ValidateAsync(productItems, ct);
 
-            List<ProductValidationResultDto> productItems;
-            try
-            {
-                productItems = await _productCatalogClient.ValidateAsync(requestForCatalog, ct);
-
-                if (productItems.Any(r => !r.CanFulfill))
-                {
-                    await MarkIdempotencyAsFailed(idempotency, "One or more products are invalid or have insufficient stock.", HttpStatusCode.BadRequest, ct);
-                    throw new OrdersException("One or more products are invalid or have insufficient stock.");
-                }
-            }
-            catch (OrdersException)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                await MarkIdempotencyAsFailed(idempotency, "Failed to validate products with catalog service.", HttpStatusCode.ServiceUnavailable, ct);
-                throw new OrdersException("Failed to validate products. Please try again later.");
-            }
+            EnsureAllAvailable(validatedProductQuantities);
+            EnsureSameSet(productItems, validatedProductQuantities);
 
             Order order;
-            await using (var transaction = await _db.Database.BeginTransactionAsync(ct))
+
+            await using (var tx = await _db.Database.BeginTransactionAsync(ct))
             {
-                order = new Order
-                {
-                    Guid = Guid.NewGuid(),
-                    UserId = _userId,
-                    Status = OrderStatus.Pending,
-                    CreatedAt = DateTime.UtcNow,
-                    Items = productItems.Select(pi => new OrderItem
-                    {
-                        ProductId = pi.ProductId,
-                        ProductName = pi.Name!,
-                        UnitPrice = (decimal)pi.Price!,
-                        Quantity = pi.RequestedQuantity,
-                        SKU = pi.Sku!,
-                        LineTotal = (decimal)pi.Price! * pi.RequestedQuantity,
-                    }).ToList()
-                };
-
-                order.TotalAmount = order.Items.Sum(i => i.LineTotal);
-
-                _db.Orders.Add(order);
-                await _db.SaveChangesAsync(ct);
-
-                idempotency.OrderId = order.Id;
-                await _db.SaveChangesAsync(ct);
-
-                await transaction.CommitAsync(ct);
-            }
-
-            try
-            {
-                var reserveKey = $"order:{idempotencyKey}";
-                await _productCatalogClient.DecrementStockAsync(reserveKey, requestForCatalog, ct);
-
-                await using var transaction = await _db.Database.BeginTransactionAsync(ct);
                 try
                 {
-                    order.Status = OrderStatus.Confirmed;
-                    order.UpdatedAt = DateTime.UtcNow;
+                    order = BuildPendingOrder(validatedProductQuantities);
+                    _db.Orders.Add(order);
                     await _db.SaveChangesAsync(ct);
-                    await transaction.CommitAsync(ct);
+                    await tx.CommitAsync(ct);
                 }
                 catch
                 {
-                    await transaction.RollbackAsync(ct);
-                    throw;
+                    await tx.RollbackAsync(ct);
+                    throw new OrdersException("Failed to create order");
                 }
             }
-            catch (HttpRequestException)
+
+            try
             {
-                await HandleStockReservationFailure(order, idempotency, "Failed to reserve stock for the order.", HttpStatusCode.Conflict, ct);
-                throw new OrdersException("Failed to reserve stock for the order.");
+                await _productCatalogClient.DecrementStockAsync(idempotencyKey, productItems, ct);
             }
-            catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+            catch
             {
-                await HandleStockReservationFailure(order, idempotency, "Stock reservation request timed out.", HttpStatusCode.RequestTimeout, ct);
-                throw new OrdersException("Stock reservation request timed out.");
-            }
-            catch (Exception)
-            {
-                await HandleStockReservationFailure(order, idempotency, "An error occurred while reserving stock for the order.", HttpStatusCode.InternalServerError, ct);
-                throw new OrdersException("An error occurred while reserving stock for the order.");
+                await using var tx = await _db.Database.BeginTransactionAsync(ct);
+                var persisted = await _db.Orders.SingleAsync(o => o.Id == order.Id, ct);
+                persisted.Status = OrderStatus.Rejected;
+                persisted.UpdatedAt = DateTime.UtcNow;
+
+                var idemRow = await _db.OrderIdempotencies
+                    .SingleAsync(i => i.IdempotencyKey == idempotencyKey, ct);
+                idemRow.Status = IdempotencyStatus.Failed;
+                idemRow.UpdatedAt = DateTime.UtcNow;
+
+                await _db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+
+                throw new OrdersException("Stock reservation rejected");
             }
 
             var orderDetailsDto = order.ToOrderDetailsDto();
 
-            idempotency.Status = IdempotencyStatus.Succeeded;
-            idempotency.ResponseBody = JsonSerializer.Serialize(orderDetailsDto);
-            idempotency.ResponseCode = (int)HttpStatusCode.Created;
-            await _db.SaveChangesAsync(ct);
+            await using (var tx = await _db.Database.BeginTransactionAsync(ct))
+            {
+                var idemRow = await _db.OrderIdempotencies
+                    .SingleAsync(i => i.IdempotencyKey == idempotencyKey, ct);
+
+                idemRow.Status = IdempotencyStatus.Completed;
+                idemRow.OrderId = order.Id;
+                idemRow.ResponseBody = JsonSerializer.Serialize(orderDetailsDto);
+                idemRow.ResponseCode = (int)HttpStatusCode.Created;
+                idemRow.UpdatedAt = DateTime.UtcNow;
+
+                await _db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+            }
 
             return orderDetailsDto;
         }
+
+        private Order BuildPendingOrder(List<ProductValidationResultDto> validatedProductQuantities)
+        {
+            var order = new Order
+            {
+                Guid = Guid.NewGuid(),
+                UserId = _userId,
+                Status = OrderStatus.Pending,
+                CreatedAt = DateTime.UtcNow,
+                Items = validatedProductQuantities.Select(pi => new OrderItem
+                {
+                    ProductId = pi.ProductId,
+                    ProductName = pi.Name!,
+                    UnitPrice = (decimal)pi.Price!,
+                    Quantity = pi.RequestedQuantity,
+                    SKU = pi.Sku!,
+                    LineTotal = (decimal)pi.Price! * pi.RequestedQuantity,
+                }).ToList()
+            };
+
+            order.TotalAmount = order.Items.Sum(i => i.LineTotal);
+
+            return order;
+        }
+
+        private static string BuildDeterministicKey(IReadOnlyList<ProductQuantityItemDto> items)
+        {
+            var sb = new StringBuilder();
+            foreach (var it in items)
+                sb.Append(it.ProductId).Append(':').Append(it.Quantity).Append(';');
+            return HashUtils.ComputeSha256Hash(sb.ToString());
+        }
+
+
+        private static void ValidateIdempotencyKey(string idempotencyKey)
+        {
+            if (string.IsNullOrWhiteSpace(idempotencyKey))
+                throw new OrdersException("Idempotency key is required.");
+        }
+
+        private static List<ProductQuantityItemDto> GetGroupedProductItems(IReadOnlyList<ProductQuantityItemDto> items)
+        {
+            return items
+                .GroupBy(i => i.ProductId)
+                .Select(g => new ProductQuantityItemDto { ProductId = g.Key, Quantity = g.Sum(x => x.Quantity) })
+                .OrderBy(x => x.ProductId)
+                .ToList();
+        }
+
+        private static void EnsureAllAvailable(IEnumerable<ProductValidationResultDto> validation)
+        {
+            var bad = validation.FirstOrDefault(v => !v.CanFulfill);
+            if (bad is not null)
+                throw new OrdersException($"Product {bad.ProductId} is not available.");
+        }
+
+        private static void EnsureSameSet(
+            IReadOnlyList<ProductQuantityItemDto> requested,
+            IReadOnlyList<ProductValidationResultDto> validated)
+        {
+            var reqSet = requested.GroupBy(x => x.ProductId).Select(g => g.Key).OrderBy(x => x).ToArray();
+            var valSet = validated.Select(v => v.ProductId).OrderBy(x => x).ToArray();
+            if (reqSet.Length != valSet.Length || !reqSet.SequenceEqual(valSet))
+                throw new OrdersException("Catalog validation mismatch.");
+        }
+
 
         public Task<OrderDetailsDto?> GetOrderByIdAsync(int id, CancellationToken ct)
         {
@@ -205,7 +239,7 @@ namespace Orders.Api.Services
             throw new NotImplementedException();
         }
 
-        private void ValidateProductQuantities(IReadOnlyList<CreateOrderItemDto> items)
+        private void ValidateProductQuantities(IReadOnlyList<ProductQuantityItemDto> items)
         {
             if (items is null || items.Count == 0)
                 throw new OrdersException("No items provided.");

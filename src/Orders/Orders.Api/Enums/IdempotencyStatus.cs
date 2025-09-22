@@ -2,8 +2,8 @@
 {
     public enum IdempotencyStatus
     {
-        InProgress,
-        Succeeded,
+        Started,
+        Completed,
         Failed
     }
 }
