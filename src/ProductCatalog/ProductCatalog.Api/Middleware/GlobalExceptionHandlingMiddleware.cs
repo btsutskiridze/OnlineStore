@@ -72,7 +72,7 @@ namespace ProductCatalog.Api.Middleware
 
                 ProductSkuConflictException ex => new ApiErrorResponse
                 {
-                    Title = "SKU Conflict",
+                    Title = "SKU Already Used",
                     Status = (int)HttpStatusCode.Conflict,
                     Detail = ex.Message,
                     Instance = instance,
@@ -81,7 +81,7 @@ namespace ProductCatalog.Api.Middleware
 
                 ConcurrencyConflictException ex => new ApiErrorResponse
                 {
-                    Title = "Concurrency Conflict",
+                    Title = "Data Changed",
                     Status = (int)HttpStatusCode.Conflict,
                     Detail = ex.Message,
                     Instance = instance,
@@ -90,7 +90,7 @@ namespace ProductCatalog.Api.Middleware
 
                 ProductCatalogException ex => new ApiErrorResponse
                 {
-                    Title = "Product Catalog Error",
+                    Title = "Product Problem",
                     Status = (int)HttpStatusCode.BadRequest,
                     Detail = ex.Message,
                     Instance = instance,
@@ -110,7 +110,7 @@ namespace ProductCatalog.Api.Middleware
                 {
                     Title = "Internal Server Error",
                     Status = (int)HttpStatusCode.InternalServerError,
-                    Detail = "An unexpected error occurred while processing your request.",
+                    Detail = "Something went wrong with your request. Please try again.",
                     Instance = instance,
                     TraceId = traceId
                 }

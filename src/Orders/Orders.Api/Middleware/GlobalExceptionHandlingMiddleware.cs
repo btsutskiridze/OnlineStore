@@ -28,7 +28,7 @@ namespace Orders.Api.Middleware
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An unhandled exception occurred while processing the request");
+                _logger.LogError(ex, "Unexpected error happened during request processing");
                 await HandleExceptionAsync(context, ex);
             }
         }
@@ -63,7 +63,7 @@ namespace Orders.Api.Middleware
 
                 InsufficientStockException ex => new ApiErrorResponse
                 {
-                    Title = "Insufficient Stock",
+                    Title = "Not Enough Stock",
                     Status = (int)HttpStatusCode.BadRequest,
                     Detail = ex.Message,
                     Instance = instance,
@@ -72,7 +72,7 @@ namespace Orders.Api.Middleware
 
                 OrdersException ex => new ApiErrorResponse
                 {
-                    Title = "Orders Error",
+                    Title = "Order Problem",
                     Status = (int)HttpStatusCode.BadRequest,
                     Detail = ex.Message,
                     Instance = instance,
@@ -92,7 +92,7 @@ namespace Orders.Api.Middleware
                 {
                     Title = "Internal Server Error",
                     Status = (int)HttpStatusCode.InternalServerError,
-                    Detail = "An unexpected error occurred while processing your request.",
+                    Detail = "Something went wrong with your request. Please try again.",
                     Instance = instance,
                     TraceId = traceId
                 }

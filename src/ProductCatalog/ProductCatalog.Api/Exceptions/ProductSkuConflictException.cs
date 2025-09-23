@@ -2,7 +2,7 @@
 {
     public class ProductSkuConflictException : ProductCatalogException
     {
-        public ProductSkuConflictException(string sku) : base($"A product with SKU '{sku}' already exists.")
+        public ProductSkuConflictException(string sku) : base($"SKU '{sku}' is already used by another product.")
         {
         }
     }

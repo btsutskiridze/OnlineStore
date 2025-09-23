@@ -210,8 +210,8 @@ namespace ProductCatalog.Api.Services
             var productExists = await dbContext.Products.AnyAsync(p => p.Id == productId, ct);
 
             return productExists
-                ? $"Insufficient stock for product {productId}"
-                : $"Product {productId} not found";
+                ? $"Not enough stock for product {productId}"
+                : $"Product {productId} doesn't exist";
         }
 
         private static bool IsIdempotencyKeyConflict(DbUpdateException exception)

@@ -53,7 +53,7 @@ namespace Orders.Api.Services
             catch
             {
                 await HandleOrderValidationFailure(idempotency!, "Stock validation failed", HttpStatusCode.Conflict, ct);
-                throw new OrdersException("Order Products validation Failed");
+                throw new OrdersException("Order products validation failed");
             }
 
             try
@@ -64,7 +64,7 @@ namespace Orders.Api.Services
             catch
             {
                 await HandleStockReservationFailure(pendingOrder, idempotency!, "Stock reservation failed", HttpStatusCode.Conflict, ct);
-                throw new OrdersException("Unable to reserve requested quantities. Product availability may have changed.");
+                throw new OrdersException("Cannot reserve products. stock may have changed while you were ordering.");
             }
 
             var orderDetails = pendingOrder.ToOrderDetailsDto();
@@ -90,18 +90,18 @@ namespace Orders.Api.Services
         private async Task<(OrderIdempotency?, OrderDetailsDto?)> ProcessExistingIdempotencyRecord(OrderIdempotency idempotency, string requestFingerprint, CancellationToken ct)
         {
             if (idempotency.RequestHash is not null && !string.Equals(idempotency.RequestHash, requestFingerprint, StringComparison.Ordinal))
-                throw new OrdersException("Idempotency key has already been used with different request parameters.");
+                throw new OrdersException("This idempotency key was used before with different data.");
 
             switch (idempotency.Status)
             {
                 case IdempotencyStatus.Completed:
                     if (string.IsNullOrEmpty(idempotency.ResponseBody) || idempotency.ResponseCode != (int)HttpStatusCode.Created)
-                        throw new OrdersException("Idempotent replay has no stored response.");
+                        throw new OrdersException("Cannot replay this request - response data missing.");
 
                     return (null, JsonSerializer.Deserialize<OrderDetailsDto>(idempotency.ResponseBody)!);
 
                 case IdempotencyStatus.Failed:
-                    throw new OrdersException("The previous operation with the same idempotency key failed.");
+                    throw new OrdersException("Previous request with same idempotency key failed.");
 
                 case IdempotencyStatus.Started:
                     await HandleConcurrentRequest(idempotency, ct);
@@ -116,7 +116,7 @@ namespace Orders.Api.Services
             var requestAge = DateTime.UtcNow - (idempotency.UpdatedAt ?? idempotency.CreatedAt);
             if (requestAge < TimeSpan.FromSeconds(CONCURRENT_REQUEST_WINDOW_SECONDS))
             {
-                throw new OrdersException("Request with this Idempotency-Key is already in progress. Please retry in a few moments.");
+                throw new OrdersException("Another request with same idempotency key is still processing");
             }
 
             idempotency.UpdatedAt = DateTime.UtcNow;
@@ -142,7 +142,7 @@ namespace Orders.Api.Services
             }
             catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
             {
-                throw new OrdersException("An operation with the same idempotency key is already in progress. Please try again later.");
+                throw new OrdersException("Same request is already running. Try again later.");
             }
         }
 
@@ -267,7 +267,7 @@ namespace Orders.Api.Services
             var validatedProductIds = validatedProducts.Select(v => v.ProductId).OrderBy(x => x).ToArray();
 
             if (requestedProductIds.Length != validatedProductIds.Length || !requestedProductIds.SequenceEqual(validatedProductIds))
-                throw new OrdersException("Catalog validation mismatch.");
+                throw new OrdersException("Product catalog validation mismatch.");
         }
 
         private static bool IsUniqueConstraintViolation(DbUpdateException exception)
