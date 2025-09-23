@@ -22,10 +22,10 @@ namespace Orders.Api.Services
 
         public async Task<OrderDetailsDto?> GetOrderByIdAsync(Guid guid, CancellationToken ct)
         {
-            var order = _db.Orders
+            var order = await _db.Orders
                 .AsNoTracking()
                 .Include(x => x.Items)
-                .FirstOrDefault(x => x.Guid == guid)
+                .FirstOrDefaultAsync(x => x.Guid == guid, ct)
                 ?? throw new OrderNotFoundException(guid);
 
             return order.ToOrderDetailsDto();
@@ -36,7 +36,14 @@ namespace Orders.Api.Services
             var orderListItems = await _db.Orders
                 .AsNoTracking()
                 .Where(x => x.UserId == _currentUserId)
-                .Select(x => x.ToOrderListItemDto())
+                .Select(x => new OrderListItemDto
+                {
+                    Guid = x.Guid,
+                    TotalAmount = x.TotalAmount,
+                    CreatedAt = x.CreatedAt,
+                    Status = x.Status.ToString(),
+                    ItemCount = x.Items.Count
+                })
                 .ToListAsync(ct);
 
             return orderListItems;
