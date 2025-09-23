@@ -2,8 +2,6 @@
 
 ## Overview
 
-This project implements two independent microservices for an online store:
-
 - **Auth Service** - JWT token generation for authentication
 - **ProductCatalog Service** - Product management and inventory
 - **Orders Service** - Order processing and management
@@ -58,9 +56,9 @@ Protected endpoints in ProductCatalog API (used by Orders):
 
 ### 1. Database Setup
 
-The services use Entity Framework with automatic migrations. Databases will be created automatically on first run.
+The database migrations will run automatically on the first run of the services.
 
-**Important**: Update the connection strings in the `appsettings.Development.json` files if you're not using the default SQL Server LocalDB:
+**Important**: Update the connection strings in the `appsettings.Development.json`
 
 - `src/ProductCatalog/ProductCatalog.Api/appsettings.Development.json`
 - `src/Orders/Orders.Api/appsettings.Development.json`
