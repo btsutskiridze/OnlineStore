@@ -134,6 +134,44 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### ProductCatalog Service (Port 5001)
 
+#### Internal Service Endpoints Testing
+
+The ProductCatalog service has internal endpoints (`/api/products/validate`, `/api/products/stock/decrement-batch`, `/api/products/stock/replenish-batch`) that require service-to-service authentication. To test these endpoints manually, you need to generate an internal service token:
+
+**Generate Internal Service Token:**
+
+```bash
+POST http://localhost:5000/Auth/internal/token
+X-Client-Id: Orders
+X-Client-Secret: long-secret-token
+X-Audience: ProductCatalog
+```
+
+**Response:**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+Use this token in the `Authorization: Bearer` header when testing the internal endpoints.
+
+**Example - Validate Products:**
+
+```bash
+POST http://localhost:5001/api/products/validate
+Authorization: Bearer {internal_service_token}
+Content-Type: application/json
+
+[
+  {
+    "productId": 1,
+    "quantity": 2
+  }
+]
+```
+
 #### 1. Create Product (Admin Only)
 
 ```bash
