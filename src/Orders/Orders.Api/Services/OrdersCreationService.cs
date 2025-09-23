@@ -58,7 +58,8 @@ namespace Orders.Api.Services
 
             try
             {
-                await ReserveProductStock(idempotencyKey, consolidatedItems, ct);
+                var reserveKey = $"order:{pendingOrder.Guid}";
+                await ReserveProductStock(reserveKey, consolidatedItems, ct);
             }
             catch
             {

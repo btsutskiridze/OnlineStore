@@ -2,6 +2,6 @@
 {
     public interface IOrdersCancellationService
     {
-        Task<bool> CancelOrderAsync(Guid guid, CancellationToken ct);
+        Task CancelOrderAsync(Guid guid, string rowVersionBase64, CancellationToken ct);
     }
 }

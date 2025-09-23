@@ -49,9 +49,9 @@ namespace Orders.Api.Controllers
         }
 
         [HttpPost("{guid:guid}/cancel")]
-        public async Task<IActionResult> CancelOrder(Guid guid, CancellationToken ct)
+        public async Task<IActionResult> CancelOrder(Guid guid, [FromBody] OrderCancelDto orderCancelDto, CancellationToken ct)
         {
-            await _ordersCancellationService.CancelOrderAsync(guid, ct);
+            await _ordersCancellationService.CancelOrderAsync(guid, orderCancelDto.RowVersionBase64, ct);
 
             return NoContent();
         }

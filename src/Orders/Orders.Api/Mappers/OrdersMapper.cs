@@ -14,6 +14,7 @@ namespace Orders.Api.Mappers
                 TotalAmount = order.TotalAmount,
                 CreatedAt = order.CreatedAt,
                 Status = order.Status.ToString(),
+                RowVersionBase64 = Convert.ToBase64String(order.RowVersion),
                 Items = order.Items.Select(i => new OrderItemDetailsDto
                 {
                     ProductId = i.ProductId,
@@ -35,6 +36,15 @@ namespace Orders.Api.Mappers
                 CreatedAt = order.CreatedAt,
                 Status = order.Status.ToString(),
                 ItemCount = order.Items.Count,
+            };
+        }
+
+        public static ProductQuantityItemDto ToProductQuantityItemDto(this OrderItem orderItem)
+        {
+            return new()
+            {
+                ProductId = orderItem.ProductId,
+                Quantity = orderItem.Quantity,
             };
         }
     }

@@ -7,6 +7,7 @@
         public string Status { get; set; } = default!;
         public decimal TotalAmount { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string RowVersionBase64 { get; set; } = default!;
         public List<OrderItemDetailsDto> Items { get; set; } = new();
     }
 }
