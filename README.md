@@ -289,6 +289,17 @@ Authorization: Bearer {user_token}
 ```bash
 POST http://localhost:5002/api/orders/a1b2c3d4-e5f6-7890-abcd-ef1234567890/cancel
 Authorization: Bearer {user_token}
+Content-Type: application/json
+
+{
+  "rowVersionBase64": "AAAAAAAAB9E="
+}
+```
+
+**Response:**
+
+```
+HTTP 204 No Content
 ```
 
 ## Order Statuses
@@ -311,6 +322,19 @@ src/
 tests/                          # Unit and integration tests
 ```
 
+## Running Tests
+
+The project also has simple unit tests for the product catalog and orders services controllers.
+
+```bash
+# Run all tests
+dotnet test
+
+# Run tests for a specific project
+dotnet test tests/ProductCatalog/UnitTests/ProductCatalog.UnitTests.csproj
+dotnet test tests/Orders/UnitTests/Orders.UnitTests.csproj
+```
+
 ## Technologies Used
 
 - **Framework**: ASP.NET Core 8.0
@@ -319,5 +343,6 @@ tests/                          # Unit and integration tests
 - **API Documentation**: Swagger/OpenAPI
 - **Validation**: Data Annotations
 - **Resilience**: Polly for retry policies
+- **Testing**: xUnit, Moq, FluentAssertions
 
 ---
