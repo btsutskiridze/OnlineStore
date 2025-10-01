@@ -17,7 +17,7 @@ app.UseGlobalExceptionHandling();
 
 app.UseSwaggerDocumentation();
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
